@@ -58,6 +58,44 @@ void drawLine(int x1, int y1, int x2, int y2) {
         Draw a line from (x1, y1) to (x2, y2)
         using the '*' character.
     */
+        int dx = abs(x2 - x1);
+    int dy = abs(y2 - y1);
+
+    int sx;
+    int sy;
+    int err;
+    int e2;
+
+    if (x1 < x2)
+        sx = 1;
+    else
+        sx = -1;
+
+    if (y1 < y2)
+        sy = 1;
+    else
+        sy = -1;
+
+    err = dx - dy;
+
+    while (1) {
+        setPixel(x1, y1);
+
+        if (x1 == x2 && y1 == y2)
+            break;
+
+        e2 = 2 * err;
+
+        if (e2 > -dy) {
+            err = err - dy;
+            x1 = x1 + sx;
+        }
+
+        if (e2 < dx) {
+            err = err + dx;
+            y1 = y1 + sy;
+        }
+    }
 }
 
 void drawRectangle(int x1, int y1, int x2, int y2) {
@@ -67,6 +105,10 @@ void drawRectangle(int x1, int y1, int x2, int y2) {
         Top-left corner is (x1, y1).
         Bottom-right corner is (x2, y2).
     */
+    drawLine(x1, y1, x2, y1);
+    drawLine(x2, y1, x2, y2);
+    drawLine(x2, y2, x1, y2);
+    drawLine(x1, y2, x1, y1);
 }
 
 void drawCircle(int cx, int cy, int radius) {
