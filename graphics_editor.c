@@ -117,6 +117,19 @@ void drawCircle(int cx, int cy, int radius) {
         Draw a circle with center (cx, cy)
         and given radius using '*'.
     */
+    int x,y;
+    int value;
+    for(y=-radius;y<=radius;y++)
+    {
+        for(x=-radius;x<=radius;x++)
+        {
+            value=x*x+y*y;
+            if(value>=radius * radius-radius && value<=radius*radius+radius)
+            {
+                setPixel(cx+x,cy+y);
+            }
+        }
+    }
 }
 
 void drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3) {
@@ -124,6 +137,9 @@ void drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3) {
         TODO:
         Draw a triangle by joining the three given points.
     */
+    drawLine(x1,y1,x2,y2);
+    drawLine(x1,y2,x3,y3);
+    drawLine(x3,y3,x1,y1);
 }
 
 int main() {
