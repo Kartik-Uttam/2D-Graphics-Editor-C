@@ -6,65 +6,52 @@
 
 #define EMPTY '_'
 #define PIXEL '*'
+#define MAX_OBJECTS 50
 
 char picture[HEIGHT][WIDTH];
 
+struct Shape {
+    int id;
+    int type;   // 1-Line, 2-Rectangle, 3-Circle, 4-Triangle
+    int x1, y1, x2, y2, x3, y3;
+    int radius;
+};
+
+struct Shape objects[MAX_OBJECTS];
+int objectCount = 0;
+int nextId = 1;
+
 void clearPicture() {
-    /*
-        TODO:
-        Fill the entire 2D array picture with EMPTY character '_'.
-    */
-    int i,j;
-    for(i=0;i<HEIGHT;i++)
-    {
-        for(j=0;j<WIDTH;j++)
-        {
-            printf("%c",picture[i][j]);
+    int i, j;
+
+    for (i = 0; i < HEIGHT; i++) {
+        for (j = 0; j < WIDTH; j++) {
+            picture[i][j] = EMPTY;
         }
     }
 }
 
 void displayPicture() {
-    /*
-        TODO:
-        Print the 2D picture array row by row.
-    */
-    int i,j;
-    for(i=0;i<HEIGHT;i++)
-    {
-        for(j=0;j<WIDTH;j++)
-        {
-            printf("%c",picture[i][j]);
+    int i, j;
+
+    for (i = 0; i < HEIGHT; i++) {
+        for (j = 0; j < WIDTH; j++) {
+            printf("%c", picture[i][j]);
         }
         printf("\n");
     }
 }
 
 void setPixel(int x, int y) {
-    /*
-        TODO:
-        If x and y are inside the canvas,
-        set picture[y][x] to PIXEL character '*'.
-    */
-    if(x>=0 && x<WIDTH && y>=0 && y<HEIGHT)
-    {
-        picture[y][x]=PIXEL;
+    if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT) {
+        picture[y][x] = PIXEL;
     }
 }
 
 void drawLine(int x1, int y1, int x2, int y2) {
-    /*
-        TODO:
-        Draw a line from (x1, y1) to (x2, y2)
-        using the '*' character.
-    */
-        int dx = abs(x2 - x1);
+    int dx = abs(x2 - x1);
     int dy = abs(y2 - y1);
-
-    int sx;
-    int sy;
-    int err;
-    int e2;
+    int sx, sy, err, e2;
 
     if (x1 < x2)
         sx = 1;
@@ -99,12 +86,6 @@ void drawLine(int x1, int y1, int x2, int y2) {
 }
 
 void drawRectangle(int x1, int y1, int x2, int y2) {
-    /*
-        TODO:
-        Draw a rectangle using four lines.
-        Top-left corner is (x1, y1).
-        Bottom-right corner is (x2, y2).
-    */
     drawLine(x1, y1, x2, y1);
     drawLine(x2, y1, x2, y2);
     drawLine(x2, y2, x1, y2);
@@ -112,34 +93,71 @@ void drawRectangle(int x1, int y1, int x2, int y2) {
 }
 
 void drawCircle(int cx, int cy, int radius) {
-    /*
-        TODO:
-        Draw a circle with center (cx, cy)
-        and given radius using '*'.
-    */
-    int x,y;
+    int x, y;
     int value;
-    for(y=-radius;y<=radius;y++)
-    {
-        for(x=-radius;x<=radius;x++)
-        {
-            value=x*x+y*y;
-            if(value>=radius * radius-radius && value<=radius*radius+radius)
-            {
-                setPixel(cx+x,cy+y);
+
+    for (y = -radius; y <= radius; y++) {
+        for (x = -radius; x <= radius; x++) {
+            value = x * x + y * y;
+
+            if (value >= radius * radius - radius &&
+                value <= radius * radius + radius) {
+                setPixel(cx + x, cy + y);
             }
         }
     }
 }
 
 void drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3) {
-    /*
-        TODO:
-        Draw a triangle by joining the three given points.
-    */
-    drawLine(x1,y1,x2,y2);
-    drawLine(x1,y2,x3,y3);
-    drawLine(x3,y3,x1,y1);
+    drawLine(x1, y1, x2, y2);
+    drawLine(x2, y2, x3, y3);
+    drawLine(x3, y3, x1, y1);
+}
+
+void addObject(int type, int x1, int y1, int x2, int y2, int x3, int y3, int radius) {
+    if (objectCount >= MAX_OBJECTS) {
+        printf("Object limit reached.\n");
+        return;
+    }
+
+    objects[objectCount].id = nextId;
+    objects[objectCount].type = type;
+    objects[objectCount].x1 = x1;
+    objects[objectCount].y1 = y1;
+    objects[objectCount].x2 = x2;
+    objects[objectCount].y2 = y2;
+    objects[objectCount].x3 = x3;
+    objects[objectCount].y3 = y3;
+    objects[objectCount].radius = radius;
+
+    printf("Object added with ID %d\n", nextId);
+
+    objectCount++;
+    nextId++;
+}
+
+void listObjects() {
+    int i;
+
+    if (objectCount == 0) {
+        printf("No objects added.\n");
+        return;
+    }
+
+    printf("\nObject List:\n");
+
+    for (i = 0; i < objectCount; i++) {
+        printf("ID: %d  Type: ", objects[i].id);
+
+        if (objects[i].type == 1)
+            printf("Line\n");
+        else if (objects[i].type == 2)
+            printf("Rectangle\n");
+        else if (objects[i].type == 3)
+            printf("Circle\n");
+        else if (objects[i].type == 4)
+            printf("Triangle\n");
+    }
 }
 
 int main() {
@@ -160,6 +178,7 @@ int main() {
         printf("3. Draw Circle\n");
         printf("4. Draw Triangle\n");
         printf("5. Display Picture\n");
+        printf("6. List Objects\n");
         printf("0. Exit\n");
         printf("Enter choice: ");
 
@@ -172,6 +191,7 @@ int main() {
             scanf("%d %d %d %d", &x1, &y1, &x2, &y2);
 
             drawLine(x1, y1, x2, y2);
+            addObject(1, x1, y1, x2, y2, 0, 0, 0);
         }
         else if (choice == 2) {
             int x1, y1, x2, y2;
@@ -180,6 +200,7 @@ int main() {
             scanf("%d %d %d %d", &x1, &y1, &x2, &y2);
 
             drawRectangle(x1, y1, x2, y2);
+            addObject(2, x1, y1, x2, y2, 0, 0, 0);
         }
         else if (choice == 3) {
             int cx, cy, radius;
@@ -188,6 +209,7 @@ int main() {
             scanf("%d %d %d", &cx, &cy, &radius);
 
             drawCircle(cx, cy, radius);
+            addObject(3, cx, cy, 0, 0, 0, 0, radius);
         }
         else if (choice == 4) {
             int x1, y1, x2, y2, x3, y3;
@@ -197,10 +219,14 @@ int main() {
                   &x1, &y1, &x2, &y2, &x3, &y3);
 
             drawTriangle(x1, y1, x2, y2, x3, y3);
+            addObject(4, x1, y1, x2, y2, x3, y3, 0);
         }
         else if (choice == 5) {
             printf("The picture is:\n");
             displayPicture();
+        }
+        else if (choice == 6) {
+            listObjects();
         }
         else if (choice == 0) {
             printf("Exiting program.\n");
