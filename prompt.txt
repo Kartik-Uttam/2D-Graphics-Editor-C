@@ -1,225 +1,386 @@
 Prompt:
 Explain the final 2D Graphics Editor C code.
+
 Response:
 The final program is a menu-driven 2D Graphics Editor written in C. It uses a two-dimensional character array to represent a drawing canvas. The user can draw geometric shapes such as lines, rectangles, circles, and triangles using coordinates entered through the keyboard. The program also supports storing shapes as objects, listing objects, deleting objects, and modifying existing objects.
+
 Code:
+
+#include <stdio.h>
+#include <stdlib.h>
+
 #define WIDTH 80
 #define HEIGHT 24
 #define EMPTY '_'
 #define PIXEL '*'
 #define MAX_OBJECTS 50
-char picture[HEIGHT][WIDTH];
-Explanation:
-The canvas size is fixed as 80 columns and 24 rows. The picture array stores the complete drawing. Initially all positions contain '_', representing empty space. Whenever a shape is drawn, some positions are changed to '*'.
-The use of a 2D array makes the program simple because each array element behaves like a pixel on the screen.
 
+char picture[HEIGHT][WIDTH];
+
+Explanation:
+The canvas size is fixed as 80 columns and 24 rows. The `picture` array stores the complete drawing. Initially all positions contain `_`, representing empty space. Whenever a shape is drawn, some positions are changed to `*`.
+
+---
 
 Prompt:
 Why is the Shape structure used in this project?
+
 Response:
 The Shape structure is used to store all information related to a graphical object.
+
 Code:
+
 struct Shape {
 int id;
 int type;
 int x1, y1, x2, y2, x3, y3;
 int radius;
 };
+
+struct Shape objects[MAX_OBJECTS];
+int objectCount = 0;
+int nextId = 1;
+
 Explanation:
-Every object drawn on the screen needs to store information about itself.
-The id field stores a unique identification number.
-The type field stores the shape type:
+Every object drawn on the screen needs to store information about itself. The `id` field stores a unique identification number. The `type` field stores the shape type:
+
 1 = Line
 2 = Rectangle
 3 = Circle
 4 = Triangle
-The coordinate fields store the position of the object.
-The radius field is used only for circles.
-Using structures allows multiple pieces of related information to be grouped together, making object management easier.
 
+The coordinate fields store the position of the object. The radius field is used only for circles. Using structures allows multiple pieces of related information to be grouped together.
+
+---
 
 Prompt:
 Explain clearPicture(), displayPicture() and setPixel().
+
 Response:
 These are the foundation functions of the graphics editor.
-Code:
-void clearPicture()
-void displayPicture()
-void setPixel(int x, int y)
-Explanation:
-clearPicture():
-This function clears the entire canvas.
-Two nested loops visit every location in the picture array and fill it with '_'.
-This function is called:
-•	At the beginning of the program
-•	During redraw operations
-•	After clearing all objects
-displayPicture():
-This function displays the complete drawing.
-It prints every row of the picture array so the user can see the current canvas.
-setPixel():
-This function draws a single pixel.
-Before placing '*', it checks whether the coordinate is inside the canvas boundaries.
-This prevents invalid memory access and keeps the program safe.
-All shape drawing functions eventually use setPixel().
 
+Code:
+
+void clearPicture() {
+int i, j;
+
+```
+for (i = 0; i < HEIGHT; i++) {
+    for (j = 0; j < WIDTH; j++) {
+        picture[i][j] = EMPTY;
+    }
+}
+```
+
+}
+
+void displayPicture() {
+int i, j;
+
+```
+for (i = 0; i < HEIGHT; i++) {
+    for (j = 0; j < WIDTH; j++) {
+        printf("%c", picture[i][j]);
+    }
+    printf("\n");
+}
+```
+
+}
+
+void setPixel(int x, int y) {
+if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT) {
+picture[y][x] = PIXEL;
+}
+}
+
+Explanation:
+`clearPicture()` clears the entire canvas using nested loops. `displayPicture()` prints every row and column of the canvas. `setPixel()` safely places `*` at a valid coordinate. This prevents drawing outside the array boundary.
+
+---
 
 Prompt:
 Explain how line, rectangle, circle and triangle are drawn.
+
 Response:
 Each shape has a separate function.
-Code:
-drawLine()
-drawRectangle()
-drawCircle()
-drawTriangle()
-Explanation:
-drawLine():
-This function draws a line between two points.
-The algorithm gradually moves from the starting point to the ending point and places '*' characters along the path.
-drawRectangle():
-A rectangle is drawn using four lines:
-•	Top edge
-•	Bottom edge
-•	Left edge
-•	Right edge
-Instead of writing rectangle logic separately, the program reuses drawLine().
-This demonstrates modular programming.
-drawTriangle():
-A triangle is created by connecting three vertices.
-Three lines are drawn:
-•	Point 1 to Point 2
-•	Point 2 to Point 3
-•	Point 3 to Point 1
-drawCircle():
-The circle function checks points around the center.
-Using the circle equation:
-x² + y² = r²
-points close to the circumference are plotted using '*'.
-This creates an approximate circular shape on the character canvas.
 
+Code:
+
+void drawRectangle(int x1, int y1, int x2, int y2) {
+drawLine(x1, y1, x2, y1);
+drawLine(x2, y1, x2, y2);
+drawLine(x2, y2, x1, y2);
+drawLine(x1, y2, x1, y1);
+}
+
+void drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3) {
+drawLine(x1, y1, x2, y2);
+drawLine(x2, y2, x3, y3);
+drawLine(x3, y3, x1, y1);
+}
+
+void drawCircle(int cx, int cy, int radius) {
+int x, y;
+int value;
+
+```
+for (y = -radius; y <= radius; y++) {
+    for (x = -radius; x <= radius; x++) {
+        value = x * x + y * y;
+
+        if (value >= radius * radius - radius &&
+            value <= radius * radius + radius) {
+            setPixel(cx + x, cy + y);
+        }
+    }
+}
+```
+
+}
+
+Explanation:
+`drawLine()` draws a line between two points. `drawRectangle()` uses four lines to form a rectangle. `drawTriangle()` connects three points using three lines. `drawCircle()` checks points around the center using the circle equation `x² + y² = r²` and plots points near the circumference.
+
+---
 
 Prompt:
 Explain addObject().
-Response:
-addObject() stores information about every shape drawn by the user.
-Explanation:
-Whenever a new shape is created:
-1.	A unique ID is assigned.
-2.	Shape type is stored.
-3.	Coordinates are stored.
-4.	Radius is stored if the object is a circle.
-5.	Object count is increased.
-Benefits:
-•	Shapes can be identified later.
-•	Shapes can be modified.
-•	Shapes can be deleted.
-•	The picture can be redrawn when required.
-Without addObject(), object management would not be possible.
 
+Response:
+`addObject()` stores information about every shape drawn by the user.
+
+Code:
+
+void addObject(int type, int x1, int y1, int x2, int y2, int x3, int y3, int radius) {
+if (objectCount >= MAX_OBJECTS) {
+printf("Object limit reached.\n");
+return;
+}
+
+```
+objects[objectCount].id = nextId;
+objects[objectCount].type = type;
+objects[objectCount].x1 = x1;
+objects[objectCount].y1 = y1;
+objects[objectCount].x2 = x2;
+objects[objectCount].y2 = y2;
+objects[objectCount].x3 = x3;
+objects[objectCount].y3 = y3;
+objects[objectCount].radius = radius;
+
+objectCount++;
+nextId++;
+```
+
+}
+
+Explanation:
+Whenever a new shape is created, a unique ID is assigned. The shape type, coordinates, and radius are stored in the `objects` array. This makes it possible to list, delete, and modify shapes later.
+
+---
 
 Prompt:
 Explain redrawPicture().
-Response:
-redrawPicture() is one of the most important functions in the project.
-Explanation:
-Instead of trying to erase only one shape from the canvas, the program follows a simpler approach.
-Step 1:
-Clear the entire canvas.
-Step 2:
-Read every object stored in the objects array.
-Step 3:
-Draw each object again.
-This guarantees that the displayed picture always matches the stored object information.
-This function is called after:
-•	Delete operation
-•	Modify operation
 
+Response:
+`redrawPicture()` clears the canvas and draws all stored objects again.
+
+Code:
+
+void redrawPicture() {
+int i;
+
+```
+clearPicture();
+
+for (i = 0; i < objectCount; i++) {
+    if (objects[i].type == 1) {
+        drawLine(objects[i].x1, objects[i].y1,
+                 objects[i].x2, objects[i].y2);
+    }
+    else if (objects[i].type == 2) {
+        drawRectangle(objects[i].x1, objects[i].y1,
+                      objects[i].x2, objects[i].y2);
+    }
+    else if (objects[i].type == 3) {
+        drawCircle(objects[i].x1, objects[i].y1,
+                   objects[i].radius);
+    }
+    else if (objects[i].type == 4) {
+        drawTriangle(objects[i].x1, objects[i].y1,
+                     objects[i].x2, objects[i].y2,
+                     objects[i].x3, objects[i].y3);
+    }
+}
+```
+
+}
+
+Explanation:
+Instead of manually erasing one shape, the program clears the whole canvas and redraws every stored object. This is useful after delete and modify operations.
+
+---
 
 Prompt:
 Explain deleteObject().
-Response:
-deleteObject() removes a shape using its ID.
-Explanation:
-The user enters the object ID.
-The function searches through the objects array.
-If the object is found:
-1.	Remaining objects are shifted one position left.
-2.	objectCount is reduced.
-3.	redrawPicture() is called.
-If the ID does not exist, an error message is displayed.
-This approach ensures that the objects array remains continuous without empty gaps.
 
+Response:
+`deleteObject()` removes a shape using its ID.
+
+Code:
+
+for (i = 0; i < objectCount; i++) {
+if (objects[i].id == id) {
+found = 1;
+
+```
+    for (j = i; j < objectCount - 1; j++) {
+        objects[j] = objects[j + 1];
+    }
+
+    objectCount--;
+    break;
+}
+```
+
+}
+
+if (found == 1) {
+redrawPicture();
+printf("Object deleted successfully.\n");
+}
+else {
+printf("Object not found.\n");
+}
+
+Explanation:
+The function searches for the object ID. If found, the object is removed by shifting the remaining objects one position left. Then `objectCount` is reduced and `redrawPicture()` updates the canvas.
+
+---
 
 Prompt:
 Explain modifyObject().
-Response:
-modifyObject() allows the user to change an existing object.
-Explanation:
-The user enters an object ID.
-The program checks the object's type.
-For a line or rectangle:
-•	New coordinates are taken.
-For a circle:
-•	New center coordinates
-•	New radius
-For a triangle:
-•	New coordinates for all three vertices
-After updating the values:
-redrawPicture() is called.
-This ensures that the displayed picture immediately reflects the changes.
 
+Response:
+`modifyObject()` allows the user to change an existing object.
+
+Code:
+
+if (objects[i].type == 1 || objects[i].type == 2) {
+scanf("%d %d %d %d",
+&objects[i].x1, &objects[i].y1,
+&objects[i].x2, &objects[i].y2);
+}
+else if (objects[i].type == 3) {
+scanf("%d %d %d",
+&objects[i].x1, &objects[i].y1,
+&objects[i].radius);
+}
+else if (objects[i].type == 4) {
+scanf("%d %d %d %d %d %d",
+&objects[i].x1, &objects[i].y1,
+&objects[i].x2, &objects[i].y2,
+&objects[i].x3, &objects[i].y3);
+}
+
+redrawPicture();
+
+Explanation:
+The user enters an object ID. The program checks the object's type and then asks for new values. After updating the stored values, `redrawPicture()` is called to show the updated shape.
+
+---
 
 Prompt:
 Explain the main menu.
+
 Response:
 The main menu provides all user interaction.
-Code:
-1.	Draw Line
-2.	Draw Rectangle
-3.	Draw Circle
-4.	Draw Triangle
-5.	Display Picture
-6.	List Objects
-7.	Delete Object
-8.	Modify Object
-9.	Clear All Objects
-10.	Exit
-Explanation:
-Draw Options:
-Allow the user to create shapes.
-Display Picture:
-Shows the current canvas.
-List Objects:
-Displays all stored objects and their IDs.
-Delete Object:
-Removes a selected object.
-Modify Object:
-Changes an existing object.
-Clear All Objects:
-Removes all shapes and resets the canvas.
-Exit:
-Terminates the program.
-The menu-driven approach makes the application easy to use and demonstrates user interaction through loops and conditional statements.
 
+Code:
+
+printf("1. Draw Line\n");
+printf("2. Draw Rectangle\n");
+printf("3. Draw Circle\n");
+printf("4. Draw Triangle\n");
+printf("5. Display Picture\n");
+printf("6. List Objects\n");
+printf("7. Delete Object\n");
+printf("8. Modify Object\n");
+printf("9. Clear All Objects\n");
+printf("0. Exit\n");
+
+Explanation:
+The menu provides all required operations. Drawing options add shapes to the picture. Display shows the current canvas. List Objects shows stored IDs. Delete and Modify use those IDs to update the picture.
+
+---
 
 Prompt:
 What are the major C programming concepts demonstrated in this project?
-Response:
-The project demonstrates several important C concepts:
-1.	Arrays
-o	Used for the drawing canvas.
-2.	Structures
-o	Used for storing shape information.
-3.	Functions
-o	Each operation is implemented as a separate function.
-4.	Loops
-o	Used for drawing and traversing the canvas.
-5.	Conditional Statements
-o	Used for menu handling and object management.
-6.	Arrays of Structures
-o	Used to store multiple objects.
-7.	Modular Programming
-o	Large tasks are divided into smaller reusable functions.
-Overall, the project combines multiple Advanced C Programming concepts into one practical application.
 
+Response:
+The project demonstrates several important C concepts.
+
+Code:
+
+char picture[HEIGHT][WIDTH];      // 2D array
+
+struct Shape objects[MAX_OBJECTS]; // array of structures
+
+while (1) {
+printf("Enter choice: ");
+scanf("%d", &choice);
+
+```
+if (choice == 1) {
+    // draw line
+}
+else if (choice == 2) {
+    // draw rectangle
+}
+```
+
+}
+
+Explanation:
+The project uses arrays for storing the drawing canvas, structures for storing shape details, loops for menu repetition and canvas traversal, functions for modular design, and conditional statements for handling user choices.
+
+
+
+
+GITHUB 
+------------------------------------------------------------
+
+Prompt:
+How do I upload my code to GitHub?
+
+Response:
+
+Commands Used:
+
+git add .
+git commit -m "Added project code"
+git push
+
+Explanation:
+
+git add . adds files for tracking.
+git commit saves the changes.
+git push uploads the changes to GitHub.
+
+------------------------------------------------------------
+
+Prompt:
+What files should be present in the repository?
+
+Response:
+
+Files:
+
+1. graphics_editor.c
+2. README.md
+3. prompt.txt
+
+Explanation:
+
+These files are required for project submission.
