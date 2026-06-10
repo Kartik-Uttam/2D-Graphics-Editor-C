@@ -381,6 +381,3 @@ Files:
 2. README.md
 3. prompt.txt
 
-Explanation:
-
-These files are required for project submission.
